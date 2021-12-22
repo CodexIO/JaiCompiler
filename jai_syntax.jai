@@ -69,7 +69,7 @@ main :: () {
     
     vectorExample();
 
-    //testproc();
+    testproc();
     
     printf("GREAT SUCCESS");
 }
