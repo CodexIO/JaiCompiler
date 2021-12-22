@@ -9,26 +9,25 @@ using namespace std;
 
 int Any::anyCount = 0;
 
+void anyTest()
+{
+    cout << "Testing Any" << endl;
+
+    unordered_map<string, Any> variables{0};
+
+    Any any;
+    any.type = Type::STRING;
+    any.value.String = new string("Hello World");
+
+    Any other = any;
+
+    Any foo = any.add(other);
+
+    cout << "AnyCount = " << Any::anyCount << endl;
+}
 
 int main()
 {
-    /*{
-        cout << "Testing Any" << endl;
-
-        unordered_map<string, Any> variables{0};
-
-        Any any;
-        any.type = Type::STRING;
-        any.value.String = new string("Hello World");
-
-        Any other = any;
-
-        Any foo = any.add(other);
-
-
-        cout << "AnyCount = " << Any::anyCount << endl;
-    }*/
-
     const char* file = "jai_syntax.jai";
 
     cout << "Compiling: " << file << endl;
