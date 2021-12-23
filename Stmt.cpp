@@ -182,7 +182,7 @@ Enum::Enum(string n, vector<string> names) : name(n)
     for (int i = 0; i < names.size(); i++)
     {
         string s = names[i];
-        values.push_back(make_tuple(s, i));
+        values[s] = i;
     }
     kind = ST::ENUM;
 }

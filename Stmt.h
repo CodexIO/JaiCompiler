@@ -82,7 +82,7 @@ ostream& operator<<(ostream& out, const Struct* stmt);
 
 struct Enum : Stmt {
     string name;
-    vector<tuple<string, int>> values;
+    unordered_map<string, int> values;
 
     Enum(string n, vector<string> names);
 };

@@ -55,6 +55,11 @@ void Interpreter::setUpTables(Block* block)
             } break;
             case (ST::ENUM): {
                 Enum* e = asEnum(stmt); enums[e->name] = e;
+
+                Any any;
+                any.type.base = Type::ENUM;
+                any.value.Ptr = (void*) e;
+                variables[e->name] = any;
             } break;
             case (ST::FUNC): {
                 Func* f = asFunc(stmt);
@@ -196,19 +201,16 @@ void Interpreter::runDecl(Stmt* stmt)
     else if (decl->type.base == Type::ENUM)
     {
 
-        string* name  = (string*) decl->type.info;
-
+        /*string* name = (string*) decl->type.info;
         if (!enums.contains(*name)) error("Enum not defined");
-
-        Enum* defn  = enums[*name];
-
-        //TODO: This doesn't work yet
+        Enum* defn  = enums[*name];*/
         
-        // CLEANUP: I think we should have a special type for enum. But for now we don't
+        any.type.base = Type::INT;
         any.value.Int = 0;
         
     }
-    else if (decl->expr) any = evaluateExpr(decl->expr);
+    
+    if (decl->expr) any = evaluateExpr(decl->expr);
     
     variables[decl->name] = any;
 }
@@ -351,7 +353,7 @@ void Interpreter::runSet(Stmt* stmt)
 
     } else if (any.type.base == Type::ENUM) {
 
-        //TODO: See above
+        // No need to do anything since enums can' be called by .
 
     } else {
         error("Set should only be called from arrays or structs or enums");
@@ -530,7 +532,7 @@ Any Interpreter::evaluateGet(Expr* expr)
 
     } else if (any.type.base == Type::ENUM) {
 
-        //TODO: See above
+        return any.getEnumValue(*access.value.String);
 
     } else {
         error("Get should only be called from arrays or structs or enums");

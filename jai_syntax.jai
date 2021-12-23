@@ -57,19 +57,31 @@ Color :: enum {
 }
 
 enumExample :: () {
-    // TODO: MAKE THIS WORK!
-    //e: Color;
-    //e = Color.BLACK;
+    print :: (en: Color) {
+        printf("Enum = " + en);
+    }
+
+    e: Color = Color.WHITE;
+
+    print(e);
+
+    e = Color.BLUE;
+
+    print(e);
+
+    e = 400;
+
+    print(e);
 }
 
 main :: () {
     printf("Lets go!");
 
-    //enumExample();
+    enumExample();
     
-    vectorExample();
+    //vectorExample();
 
-    testproc();
+    //testproc();
     
     printf("GREAT SUCCESS");
 }

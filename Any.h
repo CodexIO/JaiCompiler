@@ -103,6 +103,8 @@ struct Any {
 
     Any getStructMember(std::string name);
     void setStructMember(std::string name, Any& any);
+
+    Any getEnumValue(std::string name);
 };
 
 struct MyStruct {

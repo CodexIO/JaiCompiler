@@ -390,7 +390,7 @@ void Any::setArrayMember(int index, Any& any)
 
 Any Any::getStructMember(string name)
 {
-    if (type.base != Type::STRUCT) error("tryed to index something that isn't a Struct (reading)");
+    if (type.base != Type::STRUCT) error("tried to index something that isn't a Struct (reading)");
 
     MyStruct* st = (MyStruct*) value.Ptr;
 
@@ -399,9 +399,22 @@ Any Any::getStructMember(string name)
 
 void Any::setStructMember(string name, Any& any)
 {
-    if (type.base != Type::STRUCT) error("tryed to index something that isn't a Struct (writing)");
+    if (type.base != Type::STRUCT) error("tried to index something that isn't a Struct (writing)");
 
     MyStruct* st = (MyStruct*) value.Ptr;
 
     return st->set(name, any);
+}
+
+Any Any::getEnumValue(string name)
+{
+    if (type.base != Type::ENUM) error("tried to index something that isn't an Enum");
+
+    Enum* en = (Enum*) value.Ptr;
+
+    Any any;
+    any.type = ImprovedType(Type::INT);
+    any.value.Int = en->values[name];
+
+    return any;
 }
