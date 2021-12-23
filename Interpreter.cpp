@@ -186,19 +186,24 @@ void Interpreter::runDecl(Stmt* stmt)
     else if (decl->type.base == Type::STRUCT)
     {
 
-        Struct* defn  = (Struct*) decl->type.info;
+        string* name  = (string*) decl->type.info;
+        if (!structs.contains(*name)) error("Struct not defined");
+
+        Struct* defn  = structs[*name];
         any.value.Ptr = new MyStruct(defn);
 
     }
     else if (decl->type.base == Type::ENUM)
     {
 
-        Any tmp = evaluateExpr(decl->expr);
+        string* name  = (string*) decl->type.info;
 
-        string* enumName = tmp.value.String;
+        if (!enums.contains(*name)) error("Enum not defined");
 
-        if (!enums.contains(*enumName)) error("Struct not defined");
+        Enum* defn  = enums[*name];
 
+        //TODO: This doesn't work yet
+        
         // CLEANUP: I think we should have a special type for enum. But for now we don't
         any.value.Int = 0;
         

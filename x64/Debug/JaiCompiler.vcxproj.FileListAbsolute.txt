@@ -1,0 +1,2 @@
+C:\Dev\JaiCompiler\x64\Debug\JaiCompiler.exe
+C:\Dev\JaiCompiler\x64\Debug\JaiCompiler.pdb

@@ -50,8 +50,8 @@ struct Parser {
     } \
 
 #define CONSUME(type) \
-    CHECK(type);    \
-    nextToken();    
+    do {CHECK(type);    \
+    nextToken(); }while(false)    
 
     Type getType(string& s);
 
@@ -76,6 +76,8 @@ struct Parser {
     Expr* logicOr();
 
     Expr* parseExpression();
+
+    Decl* parseDeclaration(bool consumeSemicolon = true);
 
     Stmt* parseFunctionDefinition(string &name);
 

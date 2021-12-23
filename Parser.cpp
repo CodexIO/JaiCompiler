@@ -347,6 +347,68 @@ Expr *Parser::parseExpression()
     return expr;
 }
 
+Decl* Parser::parseDeclaration(bool consumeSemicolon)
+{
+    string name = prevTk.source;
+    ImprovedType type(Type::UNKNOWN);
+    Decl *decl;
+
+    CONSUME(COLON);
+
+    if (match(EQUAL))
+    {
+        match(EQUAL);
+        Expr *expr = parseExpression();
+        if (consumeSemicolon) CONSUME(SEMICOLON);
+        decl = new Decl(name, type, expr);
+        declarations.push_back(decl);
+        return decl;
+    }
+
+    if (match(STAR))
+        type.flags |= POINTER;
+
+    if (match(IDENTIFIER))
+    {
+        type = Type::TO_INFER;
+        type.info = (void *)new string(prevTk.source);
+    }
+    else if (match(TYPE))
+    {
+        type = getType(prevTk.source);
+    }
+    else
+    {
+        vector<string>expected{"Identifier", "Type"};
+        ERROR(prevTk.source, expected, tk);
+    }
+
+    if (match(OPEN_BRACKET))
+    {
+        type.flags |= ARRAY;
+
+        Expr *expr = parseExpression();
+        CONSUME(CLOSE_BRACKET);
+        CONSUME(SEMICOLON);
+        decl = new Decl(name, type, expr);
+    }
+    else if (tk.type == SEMICOLON || tk.type == CLOSE_PAREN || tk.type == COMMA)
+    {
+        if (consumeSemicolon) CONSUME(SEMICOLON);
+        decl = new Decl(name, type, nullptr);
+    }
+    else
+    {
+        CONSUME(EQUAL);
+        Expr *expr = parseExpression();
+        if (consumeSemicolon) CONSUME(SEMICOLON);
+        decl = new Decl(name, type, expr);
+    }
+
+    declarations.push_back(decl);
+    return decl;
+}
+
 Stmt *Parser::parseFunctionDefinition(string &name)
 {
     vector<Decl *> params;
@@ -399,22 +461,7 @@ Block *Parser::parseBlock()
 Decl *Parser::parseFunctionParameter()
 {
     CONSUME(IDENTIFIER);
-    string name = prevTk.source;
-    ImprovedType type(Type::UNKNOWN);
-    Expr* expr = nullptr;
-
-    CONSUME(COLON);
-
-    if (match(TYPE)) type.base = getType(prevTk.source);
-
-    else if (match(IDENTIFIER)) {
-        type.info = (void*) new string(prevTk.source);
-        type.base = Type::TO_INFER;
-    }
-
-    if (match(EQUAL)) expr = parseExpression();   
-
-    return new Decl(name, type, expr);
+    return parseDeclaration(false);
 }
 
 Stmt *Parser::parseStruct(string &name)
@@ -533,42 +580,9 @@ Stmt *Parser::parseIdentifierStatement()
     string name = tk.source;
     ImprovedType type(Type::UNKNOWN);
     nextToken();
-    if (match(COLON))
+    if (tk.type == COLON)
     {
-        if (tk.type == TYPE || tk.type == IDENTIFIER || tk.type == STAR)
-        {
-
-            if (match(STAR)) type.flags |= POINTER;
-
-
-            if (match(IDENTIFIER))
-            {
-                type = Type::TO_INFER;
-                type.info = (void*) new string(prevTk.source);
-            }
-            else if (match(TYPE))
-            {
-                type = getType(prevTk.source);
-            }
-
-
-            if (match(OPEN_BRACKET))
-            {
-                type.flags |= ARRAY;
-
-                Expr *expr = parseExpression();
-                CONSUME(CLOSE_BRACKET);
-                CONSUME(SEMICOLON);
-                return new Decl(name, type, expr);
-            }
-
-            if (match(SEMICOLON)) return new Decl(name, type, nullptr);
-        }
-
-        CONSUME(EQUAL);
-        Expr *expr = parseExpression();
-        CONSUME(SEMICOLON);
-        return new Decl(name, type, expr);
+        return parseDeclaration();
     }
     else if (match(EQUAL))
     {
@@ -625,6 +639,7 @@ Stmt *Parser::parseIdentifierStatement()
         }
         else if (match(IDENTIFIER))
         {
+            // TODO CLEANUP Does this even make sense?
             Expr* left  = new Ident(name); 
             Expr* right = new Ident(prevTk.source);
             CONSUME(SEMICOLON);
