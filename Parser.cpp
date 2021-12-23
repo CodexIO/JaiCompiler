@@ -372,7 +372,7 @@ Stmt *Parser::parseFunctionDefinition(string &name)
         // TODO: Make this accept other types then just normal ones, like pointers
         if (match(TYPE)) returnType.base = getType(prevTk.source);
         
-        if (match(IDENTIFIER)) returnType.flags |= Flags::STRUCT;
+        if (match(IDENTIFIER)) returnType.base = Type::TO_INFER;
     }
 
     body = parseBlock();
@@ -400,25 +400,21 @@ Decl *Parser::parseFunctionParameter()
 {
     CONSUME(IDENTIFIER);
     string name = prevTk.source;
+    ImprovedType type(Type::UNKNOWN);
+    Expr* expr = nullptr;
 
     CONSUME(COLON);
 
-    if (match(TYPE)) {
-        Type type = getType(prevTk.source);
+    if (match(TYPE)) type.base = getType(prevTk.source);
 
-        Expr *expr = nullptr;
-        if (match(EQUAL))
-            expr = parseExpression();
-
-        return new Decl(name, type, 0, expr);
+    else if (match(IDENTIFIER)) {
+        type.info = (void*) new string(prevTk.source);
+        type.base = Type::TO_INFER;
     }
-    else {
-        CONSUME(IDENTIFIER);
-        Const* structName = new Const(new string(prevTk.source));
 
-        //TODO: Handle Array of Structs
-        return new Decl(name, Type::UNKNOWN, Flags::STRUCT, structName);
-    }
+    if (match(EQUAL)) expr = parseExpression();   
+
+    return new Decl(name, type, expr);
 }
 
 Stmt *Parser::parseStruct(string &name)
@@ -535,45 +531,44 @@ Stmt *Parser::parseReturnStatement()
 Stmt *Parser::parseIdentifierStatement()
 {
     string name = tk.source;
-    Type type = Type::UNKNOWN;
-    int flags = 0;
+    ImprovedType type(Type::UNKNOWN);
     nextToken();
     if (match(COLON))
     {
         if (tk.type == TYPE || tk.type == IDENTIFIER || tk.type == STAR)
         {
 
-            if (match(STAR)) flags |= POINTER;
+            if (match(STAR)) type.flags |= POINTER;
 
-            if (match(IDENTIFIER)) {
-                flags |= Flags::STRUCT;
-                Const* structOrEnum = new Const(new string(prevTk.source));
 
-                CONSUME(SEMICOLON);
-                //TODO: Handle Array of Structs
-                return new Decl(name, type, flags, structOrEnum);
+            if (match(IDENTIFIER))
+            {
+                type = Type::TO_INFER;
+                type.info = (void*) new string(prevTk.source);
+            }
+            else if (match(TYPE))
+            {
+                type = getType(prevTk.source);
             }
 
-            CONSUME(TYPE);
-            type = getType(prevTk.source);
 
             if (match(OPEN_BRACKET))
             {
-                flags |= ARRAY;
+                type.flags |= ARRAY;
 
                 Expr *expr = parseExpression();
                 CONSUME(CLOSE_BRACKET);
                 CONSUME(SEMICOLON);
-                return new Decl(name, type, flags, expr);
+                return new Decl(name, type, expr);
             }
 
-            if (match(SEMICOLON)) return new Decl(name, type, flags);
+            if (match(SEMICOLON)) return new Decl(name, type, nullptr);
         }
 
         CONSUME(EQUAL);
         Expr *expr = parseExpression();
         CONSUME(SEMICOLON);
-        return new Decl(name, type, flags, expr);
+        return new Decl(name, type, expr);
     }
     else if (match(EQUAL))
     {
@@ -586,41 +581,43 @@ Stmt *Parser::parseIdentifierStatement()
     }
     else if (match(COLON_COLON))
     {
-        flags |= CONSTANT;
+        type.flags |= CONSTANT;
 
         if (match(BOOL_CONSTANT))
         {
+            type.base = Type::BOOL;
             CONSUME(SEMICOLON);
             if (prevTk.source == "false")
-                return new Decl(name, Type::BOOL, flags, new Const(false));
+                return new Decl(name, type, new Const(false));
             if (prevTk.source == "true")
-                return new Decl(name, Type::BOOL, flags, new Const(true));
+                return new Decl(name, type, new Const(true));
         }
         else if (match(STRING_CONSTANT))
         {
 
-            type = Type::STRING;
+            type.base = Type::STRING;
             Expr *expr = new Const(toString(prevTk));
             CONSUME(SEMICOLON);
-            return new Decl(name, type, flags, expr);
+            return new Decl(name, type, expr);
 
         }
         else if (match(NUMBER_CONSTANT))
         {
 
-            type = Type::S64;
+            type.base = Type::S64;
             Expr *expr = new Const(toInt(prevTk));
             CONSUME(SEMICOLON);
-            return new Decl(name, type, flags, expr);
-
+            return new Decl(name, type, expr);
+        
         }
         else if (match(DOUBLE_CONSTANT))
         {
 
-            type = Type::DOUBLE;
+            type.base = Type::DOUBLE;
             Expr *expr = new Const(toDouble(prevTk));
             CONSUME(SEMICOLON);
-            return new Decl(name, type, flags, expr);
+            return new Decl(name, type, expr);
+        
         }
         else if (tk.type == OPEN_PAREN)
         {
@@ -733,10 +730,8 @@ Stmt *Parser::parseStatement()
     return new Stmt();
 }
 
-vector<Stmt *> Parser::parse()
+void Parser::parse()
 {
-    vector<Stmt *> statements;
-
     nextToken();
 
     while (tk.type != END)
@@ -752,9 +747,10 @@ vector<Stmt *> Parser::parse()
 
         Stmt *st = parseStatement();
         statements.push_back(st);
-    }
 
-    return statements;
+        // TODO: CLEANUP: These are not all the Declarations in the programm.
+        if (st->kind == ST::DECL) declarations.push_back(asDecl(st));
+    }
 }
 
 string Parser::loadFile(string file)

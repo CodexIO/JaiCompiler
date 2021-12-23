@@ -10,8 +10,6 @@ namespace Flags {
     const int POINTER = 1;
     const int ARRAY = 2;
     const int CONSTANT = 4;
-    const int STRUCT = 8;
-    const int ENUM = 16;
 }
 
 union Value {
@@ -46,8 +44,10 @@ enum class Type {
 
     VOID,
     ENUM,
+    STRUCT,
     FUNCTION,
 
+    TO_INFER,
     UNKNOWN
 };
 
@@ -57,6 +57,7 @@ std::string TypeToString(Type type);
 struct ImprovedType {
     Type base = Type::UNKNOWN;
     TypeFlags flags = 0;
+    void* info;
 
     ImprovedType(Type t, TypeFlags f = 0);
 };
@@ -123,4 +124,3 @@ struct MyArray {
     Any  get(int index);
     void set(int index, Any& any);
 };
-

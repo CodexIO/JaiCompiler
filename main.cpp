@@ -34,9 +34,9 @@ int main()
 
     Parser parser(file);
 
-    auto stmts = parser.parse();
+    parser.parse();
 
-    Interpreter interp(stmts);
+    Interpreter interp(parser);
 
     interp.run();
 

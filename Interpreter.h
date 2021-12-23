@@ -12,7 +12,7 @@
 using std::string, std::cout, std::endl, std::unordered_map, std::vector;
 
 struct Interpreter {
-    vector<Stmt*> stmts;
+    Parser parser;
     unordered_map<string, Any> variables{0};
     unordered_map<string, Any> constants{0};
     unordered_map<string, Struct*> structs{0};
@@ -26,12 +26,14 @@ struct Interpreter {
     bool shouldBreak = false;
     Func* main = nullptr;
 
-    Interpreter(vector<Stmt*> s);
+    Interpreter(Parser &p);
 
     void run();
 
     void setUpTables(Block* st);
     void setUpTables(Stmt* stmt);
+
+    void inferTypes(vector<Decl*> decls);
 
     void callPrintf(Func* func);
     Any callFunction(Func* func);

@@ -15,6 +15,9 @@ struct Parser {
     Token tk;
     Token prevTk;
 
+    vector<Stmt *> statements;
+    vector<Decl *> declarations;
+
     Parser(const char* filePath);
 
     OP toOperand(Token tk);
@@ -100,7 +103,7 @@ struct Parser {
 
     Stmt* parseStatement();
 
-    vector<Stmt*> parse();
+    void parse();
 
     string loadFile(string file);
 };

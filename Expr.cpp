@@ -69,40 +69,6 @@ std::ostream &operator<<(std::ostream &out, const OP op)
     return out << OPtoString(op);
 }
 
-std::string TypeToString(Type type)
-{
-    const char *s = 0;
-#define PROCESS_VAL(p) case (Type::p): s = #p; break;
-
-    switch (type)
-    {
-        PROCESS_VAL(NUMBER)
-        PROCESS_VAL(STRING)
-        PROCESS_VAL(FLOAT)
-        PROCESS_VAL(DOUBLE)
-        PROCESS_VAL(INT)
-        PROCESS_VAL(CHAR)
-        PROCESS_VAL(BOOL)
-
-        PROCESS_VAL(S64)
-        PROCESS_VAL(S32)
-        PROCESS_VAL(S16)
-        PROCESS_VAL(S8)
-        PROCESS_VAL(U64)
-        PROCESS_VAL(U32)
-        PROCESS_VAL(U16)
-        PROCESS_VAL(U8)
-
-        PROCESS_VAL(VOID)
-        PROCESS_VAL(ENUM)
-        PROCESS_VAL(FUNCTION)
-
-        PROCESS_VAL(UNKNOWN)
-    }
-#undef PROCESS_VAL
-    return std::string(s);
-}
-
 Type getType(OP op) {
     switch (op) {
         case OP::NOT:

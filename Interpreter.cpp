@@ -10,8 +10,9 @@
 
 using std::cout, std::endl, std::string, std::vector;
 
-Interpreter::Interpreter(vector<Stmt *> s) : stmts(s) {
-    vector<Decl*> params = {new Decl("text", Type::STRING, 0, new Const("Hello World"))};
+Interpreter::Interpreter(Parser &p) : parser(p) {
+    ImprovedType type(Type::STRING, 0);
+    vector<Decl*> params = {new Decl("text", type, new Const("Hello World"))};
 
     const char* name = "printf";
     Func* printf = new Func(name, params, Type::VOID, nullptr);
@@ -23,9 +24,24 @@ void Interpreter::run()
 {
     cout << "Running: " << endl;
 
-    setUpTables(new Block(stmts));
+    setUpTables(new Block(parser.statements));
+
+    inferTypes(parser.declarations);
 
     callFunction(main);
+}
+
+void Interpreter::inferTypes(vector<Decl*> decls)
+{
+    for (auto decl : decls) {
+        if (decl->type.base == Type::TO_INFER) {
+            string* name = (string*) decl->type.info;
+            
+            if (structs.contains(*name)) decl->type.base = Type::STRUCT;
+            else if (enums.contains(*name)) decl->type.base = Type::ENUM;
+
+        }
+    }
 }
 
 void Interpreter::setUpTables(Block* block)
@@ -162,21 +178,21 @@ void Interpreter::runDecl(Stmt* stmt)
     any.type = decl->type;
 
     // Decl of Array
-    if (decl->type.flags & Flags::ARRAY) {
+    if (decl->type.flags & Flags::ARRAY)
+    {
         ImprovedType t(decl->type.base, 0);
         any.value.Ptr = new MyArray(t, evaluateExpr(decl->expr).value.Int);
     }
-    else if (decl->type.flags & Flags::STRUCT) {
-        Any tmp = evaluateExpr(decl->expr);
+    else if (decl->type.base == Type::STRUCT)
+    {
 
-        string* structName = tmp.value.String;
-
-        if (!structs.contains(*structName)) error("Struct not defined");
-
-        Struct* defn = structs[*structName];
+        Struct* defn  = (Struct*) decl->type.info;
         any.value.Ptr = new MyStruct(defn);
+
     }
-    else if (decl->type.flags & Flags::ENUM){
+    else if (decl->type.base == Type::ENUM)
+    {
+
         Any tmp = evaluateExpr(decl->expr);
 
         string* enumName = tmp.value.String;
@@ -185,6 +201,7 @@ void Interpreter::runDecl(Stmt* stmt)
 
         // CLEANUP: I think we should have a special type for enum. But for now we don't
         any.value.Int = 0;
+        
     }
     else if (decl->expr) any = evaluateExpr(decl->expr);
     
@@ -323,11 +340,11 @@ void Interpreter::runSet(Stmt* stmt)
 
         any.setArrayMember(access.value.Int, value);
 
-    } else if (any.type.flags & Flags::STRUCT) {
+    } else if (any.type.base == Type::STRUCT) {
 
         any.setStructMember(*access.value.String, value);
 
-    } else if (any.type.flags & Flags::ENUM) {
+    } else if (any.type.base == Type::ENUM) {
 
         //TODO: See above
 
@@ -498,7 +515,7 @@ Any Interpreter::evaluateGet(Expr* expr)
 
         return any.getArrayMember(access.value.Int);
 
-    } else if (any.type.flags & Flags::STRUCT) {
+    } else if (any.type.base == Type::STRUCT) {
 
         // INFO: We mark the get->expr as STRUCT 
         // even though we don't know if it's a struct or an enum
@@ -506,7 +523,7 @@ Any Interpreter::evaluateGet(Expr* expr)
 
         return any.getStructMember(*access.value.String);
 
-    } else if (any.type.flags & Flags::ENUM) {
+    } else if (any.type.base == Type::ENUM) {
 
         //TODO: See above
 

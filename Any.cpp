@@ -8,6 +8,40 @@
 
 using std::cout, std::endl, std::string, std::stringstream;
 
+std::string TypeToString(Type type)
+{
+    const char *s = 0;
+#define PROCESS_VAL(p) case (Type::p): s = #p; break;
+
+    switch (type)
+    {
+        PROCESS_VAL(NUMBER)
+        PROCESS_VAL(STRING)
+        PROCESS_VAL(FLOAT)
+        PROCESS_VAL(DOUBLE)
+        PROCESS_VAL(INT)
+        PROCESS_VAL(CHAR)
+        PROCESS_VAL(BOOL)
+
+        PROCESS_VAL(S64)
+        PROCESS_VAL(S32)
+        PROCESS_VAL(S16)
+        PROCESS_VAL(S8)
+        PROCESS_VAL(U64)
+        PROCESS_VAL(U32)
+        PROCESS_VAL(U16)
+        PROCESS_VAL(U8)
+
+        PROCESS_VAL(VOID)
+        PROCESS_VAL(ENUM)
+        PROCESS_VAL(STRUCT)
+        PROCESS_VAL(FUNCTION)
+
+        PROCESS_VAL(UNKNOWN)
+    }
+#undef PROCESS_VAL
+    return std::string(s);
+}
 
 
 ImprovedType::ImprovedType(Type t, TypeFlags f) : base(t), flags(f)
@@ -356,7 +390,7 @@ void Any::setArrayMember(int index, Any& any)
 
 Any Any::getStructMember(string name)
 {
-    if (!(type.flags & Flags::STRUCT)) error("tryed to index something that isn't a Struct (reading)");
+    if (type.base != Type::STRUCT) error("tryed to index something that isn't a Struct (reading)");
 
     MyStruct* st = (MyStruct*) value.Ptr;
 
@@ -365,7 +399,7 @@ Any Any::getStructMember(string name)
 
 void Any::setStructMember(string name, Any& any)
 {
-    if (!(type.flags & Flags::STRUCT)) error("tryed to index something that isn't a Struct (writing)");
+    if (type.base != Type::STRUCT) error("tryed to index something that isn't a Struct (writing)");
 
     MyStruct* st = (MyStruct*) value.Ptr;
 

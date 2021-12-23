@@ -79,16 +79,8 @@ ostream &operator<<(ostream &out, const Stmt *stmt)
     return out << "UNKNOWN STMT: ";
 }
 
-Decl::Decl(string n, Type t, TypeFlags f, Expr *e) : name(n), type(t, f), expr(e) 
-{
-    kind = ST::DECL;
 
-    // CLEANUP: Since we don't have initializers for Arrays yet,
-    // CLEANUP: we use the expr for the size of the Array.
-
-    // CLEANUP: Or we use it for the name of the Struct or Enum
-}
-
+/*
 Decl::Decl(string n, Type t, TypeFlags f) : name(n), type(t, f) {
     kind = ST::DECL;
 
@@ -111,6 +103,11 @@ Decl::Decl(string n, Type t, TypeFlags f) : name(n), type(t, f) {
             expr = new Const(i);
         }
     }
+}*/
+
+Decl::Decl(string n, ImprovedType t, Expr* e) : name(n), type(t), expr(e)
+{
+    kind = ST::DECL;
 }
 
 bool Decl::isConstant()

@@ -47,8 +47,9 @@ struct Decl : Stmt {
     ImprovedType type;
     Expr* expr;
 
-    Decl(string n, Type t, TypeFlags f, Expr* e);
-    Decl(string n, Type t, TypeFlags f);
+    //Decl(string n, Type t, TypeFlags f, Expr* e);
+    //Decl(string n, Type t, TypeFlags f);
+    Decl(string n, ImprovedType t, Expr* e);
 
     bool isConstant();
     bool isPointer();
